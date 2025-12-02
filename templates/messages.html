@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Social Media{% endblock %}
+
+{% block extra_css %}
+<style>
+.messages-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.friends-sidebar {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.friend-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.friend-item:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+}
+
+.friend-item.active {
+    background: #e3f2fd;
+}
+
+.friend-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.chat-area {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f5f5f5;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+}
+
+.message.sent {
+    justify-content: flex-end;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 15px;
+    position: relative;
+}
+
+.message.sent .message-bubble {
+    background: #007bff;
+    color: white;
+}
+
+.message.received .message-bubble {
+    background: white;
+    border: 1px solid #ddd;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.message-input {
+    padding: 20px;
+    border-top: 1px solid #eee;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px;
+    color: #999;
+}
+
+@media (max-width: 768px) {
+    .friends-sidebar {
+        height: 200px;
+        margin-bottom: 20px;
+    }
+
+    .chat-area {
+        height: calc(100vh - 300px);
+    }
+
+    .message-bubble {
+        max-width: 85%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="#" onclick="alert('Posts coming soon!')">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+                <a class="nav-link active" href="{{ url_for('messages') }}">
+                    <i class="fas fa-envelope me-1"></i>Messages
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar position-relative me-3">
+                <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="{{ url_for('messages') }}" class="d-flex">
+                    <input type="text" class="form-control" name="q" placeholder="Search friends..." value="{{ query }}">
+                </form>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1{% if friends_count == 0 %} d-none{% endif %}" id="friendsCount">{{ friends_count }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            <i class="fas fa-user-friends me-2"></i>View All Friends
+                        </a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') if current_user.is_admin else '#' }}" onclick="if(!{{ current_user.is_admin|lower }}){ alert('Admin panel coming soon!') }">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Messages Container -->
+<div class="container-fluid mt-4 messages-container">
+    <div class="row">
+        <!-- Friends Sidebar -->
+        <div class="col-md-4 col-lg-3">
+            <div class="friends-sidebar">
+                <div class="p-3 border-bottom">
+                    <h5 class="mb-0">Friends</h5>
+                </div>
+                {% if friends %}
+                    {% for friend in friends %}
+                    <a href="{{ url_for('chat_with_user', user_id=friend.id) }}" class="friend-item">
+                        <img src="{{ friend.profile.profile_picture if friend.profile else 'https://picsum.photos/seed/' + friend.username + '/50/50.jpg' }}"
+                             class="friend-avatar" alt="{{ friend.username }}">
+                        <div>
+                            <div class="fw-bold">{{ friend.name }}</div>
+                            <small class="text-muted">@{{ friend.username }}</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-user-friends fa-2x mb-3"></i>
+                        <p>No friends yet</p>
+                        <small>Add friends to start messaging</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-md-8 col-lg-9">
+            <div class="chat-area">
+                <div class="empty-state h-100 d-flex align-items-center justify-content-center">
+                    <div>
+                        <i class="fas fa-comments fa-4x mb-3 text-muted"></i>
+                        <h4>Select a friend to start messaging</h4>
+                        <p class="text-muted">Choose a friend from the list to begin your conversation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Refresh messages periodically
+setInterval(function() {
+    fetch('/api/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const unreadCount = document.getElementById('unreadCount');
+            if (unreadCount) {
+                if (data.count > 0) {
+                    unreadCount.textContent = data.count;
+                    unreadCount.classList.remove('d-none');
+                } else {
+                    unreadCount.classList.add('d-none');
+                }
+            }
+        });
+}, 5000);
+</script>
+{% endblock %}

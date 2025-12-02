@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts - Social Media</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-container {
+            padding: 2rem;
+        }
+
+        .posts-header {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .author-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .author-details h5 {
+            margin: 0;
+            color: var(--text-dark);
+        }
+
+        .author-details small {
+            color: #64748b;
+        }
+
+        .post-category {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .category-personal {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .category-professional {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .post-content {
+            margin: 1.5rem 0;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        .post-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #64748b;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-light);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .action-btn i {
+            font-size: 1rem;
+        }
+
+        .like-count {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .comments-preview {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .comment-preview {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .comment-preview.ai-comment {
+            background: linear-gradient(135deg, #f0f9ff, #e0e7ff);
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .ai-indicator {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        .empty-state {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 3rem;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .btn-create-post {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 10px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-create-post:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'navbar.html' %}
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Header -->
+        <div class="posts-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-newspaper me-2"></i>
+                    Posts from Your Network
+                </h2>
+                <a href="{{ url_for('create_post') }}" class="btn btn-create-post">
+                    <i class="fas fa-plus me-2"></i>Create Post
+                </a>
+            </div>
+        </div>
+
+        <!-- Posts List -->
+        {% if posts_data %}
+            {% for post_data in posts_data %}
+                <div class="post-card">
+                    <!-- Author Info -->
+                    <div class="author-info">
+                        <div class="author-avatar">
+                            {% if post_data.author.profile and post_data.author.profile.profile_picture %}
+                                <img src="{{ post_data.author.profile.profile_picture }}" alt="{{ post_data.author.name }}">
+                            {% else %}
+                                {{ post_data.author.name[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div class="author-details flex-grow-1">
+                            <h5>{{ post_data.author.name }}
+                                <span class="post-category category-{{ post_data.post.category }}">
+                                    {{ post_data.post.category|title }}
+                                </span>
+                                {% if post_data.post.is_ai_generated %}
+                                    <span class="ai-indicator">
+                                        <i class="fas fa-magic me-1"></i>AI Assisted
+                                    </span>
+                                {% endif %}
+                            </h5>
+                            <small>
+                                <i class="far fa-clock me-1"></i>
+                                {{ post_data.post.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </small>
+                        </div>
+                        {% if post_data.post.author_id == current_user.id %}
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <form method="POST" action="{{ url_for('delete_post', post_id=post_data.post.id) }}"
+                                              onsubmit="return confirm('Are you sure you want to delete this post?')">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-trash me-2"></i>Delete Post
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="post-content">
+                        {{ post_data.post.content|nl2br }}
+                    </div>
+
+                    <!-- Post Actions -->
+                    <div class="post-actions">
+                        <button class="action-btn like-btn"
+                                data-post-id="{{ post_data.post.id }}"
+                                data-vote-type="1"
+                                onclick="toggleLike(this, {{ post_data.post.id }}, 1)">
+                            <i class="fas fa-thumbs-up"></i>
+                            <span class="like-count">{{ post_data.likes }}</span>
+                        </button>
+                        <button class="action-btn dislike-btn"
+                                data-post-id="{{ post_data.post.id }}"
+                                data-vote-type="-1"
+                                onclick="toggleLike(this, {{ post_data.post.id }}, -1)">
+                            <i class="fas fa-thumbs-down"></i>
+                            <span class="like-count">{{ post_data.dislikes }}</span>
+                        </button>
+                        <a href="{{ url_for('view_post', post_id=post_data.post.id) }}" class="action-btn">
+                            <i class="fas fa-comment"></i>
+                            <span class="like-count">{{ post_data.comments_count }}</span>
+                        </a>
+                    </div>
+
+                    <!-- Comments Preview -->
+                    {% if post_data.recent_comments %}
+                        <div class="comments-preview">
+                            {% for comment in post_data.recent_comments %}
+                                <div class="comment-preview {% if comment.is_ai_comment %}ai-comment{% endif %}">
+                                    {% if comment.is_ai_comment %}
+                                        <span class="comment-author">Swift</span>
+                                        <span class="ai-indicator">AI</span>
+                                    {% else %}
+                                        <span class="comment-author">{{ comment.author.name }}</span>
+                                    {% endif %}
+                                    {{ comment.content }}
+                                </div>
+                            {% endfor %}
+                            {% if post_data.comments_count > 3 %}
+                                <a href="{{ url_for('view_post', post_id=post_data.post.id) }}" class="text-primary text-decoration-none">
+                                    View all {{ post_data.comments_count }} comments
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comments"></i>
+                <h3>No Posts Yet</h3>
+                <p class="mb-3">Be the first to share something with your friends!</p>
+                <a href="{{ url_for('create_post') }}" class="btn btn-create-post">
+                    <i class="fas fa-plus me-2"></i>Create Your First Post
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Set initial like/dislike states
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for post_data in posts_data %}
+                {% if post_data.user_vote_type == 1 %}
+                    document.querySelector(`.like-btn[data-post-id="{{ post_data.post.id }}"]`).classList.add('active');
+                {% elif post_data.user_vote_type == -1 %}
+                    document.querySelector(`.dislike-btn[data-post-id="{{ post_data.post.id }}"]`).classList.add('active');
+                {% endif %}
+            {% endfor %}
+        });
+
+        // Toggle like/dislike
+        async function toggleLike(button, postId, voteType) {
+            const otherButtonType = voteType === 1 ? -1 : 1;
+            const otherButton = document.querySelector(`.action-btn[data-vote-type="${otherButtonType}"][data-post-id="${postId}"]`);
+
+            try {
+                const response = await fetch(`/post/${postId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ vote_type: voteType })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Update counts
+                    button.querySelector('.like-count').textContent = voteType === 1 ? data.likes : data.dislikes;
+                    otherButton.querySelector('.like-count').textContent = voteType === 1 ? data.dislikes : data.likes;
+
+                    // Update active states
+                    if (data.user_vote_type === voteType) {
+                        button.classList.add('active');
+                        otherButton.classList.remove('active');
+                    } else {
+                        button.classList.remove('active');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

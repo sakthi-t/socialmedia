@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Create Profile - Social Media{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link active" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="#" onclick="alert('Posts coming soon!')">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar position-relative me-3">
+                <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="{{ url_for('search_users') }}" class="d-flex">
+                    <input type="text" class="form-control" name="q" placeholder="Search users...">
+                </form>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Messages Icon -->
+                <a class="nav-link" href="#" onclick="alert('Messages coming soon!')">
+                    <i class="fas fa-envelope"></i>
+                </a>
+
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1 d-none">0</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Friends</h6></li>
+                        <li><a class="dropdown-item" href="#">No friends yet</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#">Friend Requests <span class="badge bg-warning text-dark">0</span></a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') if current_user.is_admin else '#' }}" onclick="if(!{{ current_user.is_admin|lower }}){ alert('Admin panel coming soon!') }">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-user-plus me-2"></i>Create Your Profile</h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" id="profileForm">
+                        <!-- Profile Picture Upload -->
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <img id="profilePreview" src="https://picsum.photos/seed/default/300/300.jpg"
+                                     class="rounded-circle border border-3 border-primary"
+                                     style="width: 150px; height: 150px; object-fit: cover;" alt="Profile">
+                                <label for="profilePicture" class="position-absolute bottom-0 end-0 bg-primary text-white rounded-circle p-2"
+                                       style="cursor: pointer;" data-bs-toggle="tooltip" title="Upload photo">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                                <input type="file" class="d-none" id="profilePicture" name="profile_picture" accept="image/*">
+                            </div>
+                            <small class="text-muted d-block mt-2">Upload a passport size photo (optional)</small>
+                        </div>
+
+                        <!-- Username and Email (Prefilled and Disabled) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Username</label>
+                                <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                                <small class="text-muted">This cannot be changed</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                                <small class="text-muted">This cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <!-- Other Fields -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>Phone
+                                </label>
+                                <input type="tel" class="form-control form-control-lg shadow-sm" id="phone" name="phone"
+                                       placeholder="+1 (555) 123-4567">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="education" class="form-label fw-bold">
+                                    <i class="fas fa-graduation-cap me-1"></i>Latest Education
+                                </label>
+                                <input type="text" class="form-control form-control-lg shadow-sm" id="education" name="education"
+                                       placeholder="e.g., Bachelor's in Computer Science">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="work" class="form-label fw-bold">
+                                <i class="fas fa-briefcase me-1"></i>Latest Work
+                            </label>
+                            <input type="text" class="form-control form-control-lg shadow-sm" id="work" name="work"
+                                   placeholder="e.g., Software Engineer at Tech Corp">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="website" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-1"></i>Website
+                                </label>
+                                <input type="text" class="form-control form-control-lg shadow-sm" id="website" name="website"
+                                       placeholder="yourwebsite.com (optional)">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="github" class="form-label fw-bold">
+                                    <i class="fab fa-github me-1"></i>GitHub
+                                </label>
+                                <input type="text" class="form-control form-control-lg shadow-sm" id="github" name="github"
+                                       placeholder="yourusername (optional)">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="linkedin" class="form-label fw-bold">
+                                    <i class="fab fa-linkedin me-1"></i>LinkedIn
+                                </label>
+                                <input type="text" class="form-control form-control-lg shadow-sm" id="linkedin" name="linkedin"
+                                       placeholder="yourusername (optional)">
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Create Profile
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Secret Key Display -->
+<div class="modal fade" id="secretKeyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Your Secret Key</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Keep this key secure! Do not share with anyone.
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="secretKeyDisplay" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="copySecretKey">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Profile picture preview
+document.getElementById('profilePicture').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profilePreview').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+});
+
+// Form validation is handled server-side
+
+// Copy secret key functionality
+document.getElementById('copySecretKey')?.addEventListener('click', function() {
+    const secretKeyInput = document.getElementById('secretKeyDisplay');
+    secretKeyInput.select();
+    document.execCommand('copy');
+
+    const btn = this;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+    }, 2000);
+});
+</script>
+{% endblock %}

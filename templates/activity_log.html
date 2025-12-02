@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Log{% endblock %}
+
+{% block content %}
+<!-- Include Navbar -->
+{% include 'navbar.html' %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Activity Log
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Admin Info -->
+                    {% if current_user.is_admin %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Admin Info:</strong> Total users on the platform: {{ total_users }}
+                    </div>
+                    {% endif %}
+
+                    <!-- Filter Options -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="filter-select" class="form-label">Filter by time period:</label>
+                            <select id="filter-select" class="form-select" onchange="changeFilter()">
+                                <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Time</option>
+                                <option value="days" {% if filter_type == 'days' %}selected{% endif %}>Last 7 Days</option>
+                                <option value="weeks" {% if filter_type == 'weeks' %}selected{% endif %}>Last 4 Weeks</option>
+                                <option value="months" {% if filter_type == 'months' %}selected{% endif %}>Last 30 Days</option>
+                                <option value="years" {% if filter_type == 'years' %}selected{% endif %}>Last Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Activity List -->
+                    {% if activities.items %}
+                    <div class="activity-list">
+                        {% for activity in activities.items %}
+                        <div class="activity-item border-bottom py-3">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <!-- Activity Icon -->
+                                    <div class="activity-icon bg-light rounded-circle p-2">
+                                        {% if activity.activity_type == 'login' %}
+                                            <i class="fas fa-sign-in-alt text-success"></i>
+                                        {% elif activity.activity_type == 'logout' %}
+                                            <i class="fas fa-sign-out-alt text-danger"></i>
+                                        {% elif activity.activity_type == 'signup' %}
+                                            <i class="fas fa-user-plus text-primary"></i>
+                                        {% elif activity.activity_type == 'create_profile' %}
+                                            <i class="fas fa-id-card text-info"></i>
+                                        {% elif activity.activity_type in ['friend_request_sent', 'friend_request_received'] %}
+                                            <i class="fas fa-user-friends text-warning"></i>
+                                        {% elif activity.activity_type == 'friend_request_accepted' %}
+                                            <i class="fas fa-user-check text-success"></i>
+                                        {% elif activity.activity_type == 'friend_request_declined' %}
+                                            <i class="fas fa-user-times text-danger"></i>
+                                        {% elif activity.activity_type in ['send_message', 'receive_message'] %}
+                                            <i class="fas fa-envelope text-info"></i>
+                                        {% elif activity.activity_type == 'create_post' %}
+                                            <i class="fas fa-edit text-primary"></i>
+                                        {% elif activity.activity_type in ['like_post', 'dislike_post'] %}
+                                            <i class="fas fa-thumbs-up text-secondary"></i>
+                                        {% elif activity.activity_type == 'create_comment' %}
+                                            <i class="fas fa-comment text-info"></i>
+                                        {% elif activity.activity_type == 'chatbot_interaction' %}
+                                            <i class="fas fa-robot text-purple"></i>
+                                        {% else %}
+                                            <i class="fas fa-circle text-muted"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="activity-description">
+                                        {{ activity.description }}
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-clock me-1"></i>
+                                        {{ activity.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if activities.pages > 1 %}
+                    <nav aria-label="Activity log pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if activities.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('activity_log', page=activities.prev_num, filter=filter_type) }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for page_num in activities.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != activities.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('activity_log', page=page_num, filter=filter_type) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if activities.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('activity_log', page=activities.next_num, filter=filter_type) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No activities found for the selected time period.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function changeFilter() {
+    const filterValue = document.getElementById('filter-select').value;
+    window.location.href = `{{ url_for('activity_log') }}?filter=${filterValue}`;
+}
+</script>
+{% endblock %}

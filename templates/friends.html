@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Friends - Social Media{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="#" onclick="alert('Posts coming soon!')">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar position-relative me-3">
+                <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="{{ url_for('search_users') }}" class="d-flex">
+                    <input type="text" class="form-control" name="q" placeholder="Search users...">
+                </form>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Messages Icon -->
+                <a class="nav-link" href="{{ url_for('messages') }}">
+                    <i class="fas fa-envelope"></i>
+                </a>
+
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle active" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1">{{ friends|length }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Friends</h6></li>
+                        {% for friend in friends %}
+                        <li><a class="dropdown-item" href="{{ url_for('profile', user_id=friend.id) }}">
+                            <img src="{{ friend.profile.profile_picture if friend.profile else 'https://picsum.photos/seed/default/30/30.jpg' }}"
+                                 class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;" alt="">
+                            {{ friend.username }}
+                        </a></li>
+                        {% endfor %}
+                        {% if not friends %}
+                        <li><a class="dropdown-item" href="#">No friends yet</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            Friend Requests <span class="badge bg-warning text-dark">{{ pending_requests|length }}</span>
+                        </a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') if current_user.is_admin else '#' }}" onclick="if(!{{ current_user.is_admin|lower }}){ alert('Admin panel coming soon!') }">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container mt-4">
+    <div class="row">
+        <!-- Friends List -->
+        <div class="col-lg-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-friends me-2"></i>My Friends ({{ friends|length }})</h4>
+                </div>
+                <div class="card-body">
+                    {% if friends %}
+                    <div class="row">
+                        {% for friend in friends %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ friend.profile.profile_picture if friend.profile else 'https://picsum.photos/seed/default/50/50.jpg' }}"
+                                             class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;" alt="">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ friend.name }} (@{{ friend.username }})</h6>
+                                            <small class="text-muted">{{ friend.email }}</small>
+                                        </div>
+                                        <a href="{{ url_for('profile', user_id=friend.id) }}" class="btn btn-outline-primary btn-sm">
+                                            View Profile
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                        <h5>No friends yet</h5>
+                        <p class="text-muted">Connect with others to build your friend list</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Friend Requests Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-user-clock me-2"></i>Friend Requests ({{ pending_requests|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if pending_requests %}
+                    {% for request in pending_requests %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ request.sender.profile.profile_picture if request.sender.profile else 'https://picsum.photos/seed/default/40/40.jpg' }}"
+                                     class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;" alt="">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">{{ request.sender.name }}</h6>
+                                    <small class="text-muted">@{{ request.sender.username }}</small>
+                                </div>
+                            </div>
+                            <div class="mt-2 d-flex gap-2">
+                                <a href="{{ url_for('respond_friend_request', request_id=request.id, response='accept') }}" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Accept
+                                </a>
+                                <a href="{{ url_for('respond_friend_request', request_id=request.id, response='decline') }}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times me-1"></i>Decline
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-muted text-center">No pending friend requests</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

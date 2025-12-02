@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Search - Social Media{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="#" onclick="alert('Posts coming soon!')">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar position-relative me-3">
+                <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="{{ url_for('search_users') }}" class="d-flex">
+                    <input type="text" class="form-control" name="q" value="{{ query }}" placeholder="Search users..." required>
+                </form>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Messages Icon -->
+                <a class="nav-link" href="{{ url_for('messages') }}">
+                    <i class="fas fa-envelope"></i>
+                </a>
+
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1{% if friends_count == 0 %} d-none{% endif %}">{{ friends_count }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            <i class="fas fa-user-friends me-2"></i>View All Friends
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            Friend Requests <span class="badge bg-warning text-dark{% if pending_requests_count == 0 %} d-none{% endif %}">{{ pending_requests_count }}</span>
+                        </a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') if current_user.is_admin else '#' }}" onclick="if(!{{ current_user.is_admin|lower }}){ alert('Admin panel coming soon!') }">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Search Results{% if query %} for "{{ query }}"{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if users %}
+                    <div class="row">
+                        {% for user in users %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ user.profile.profile_picture if user.profile else 'https://picsum.photos/seed/' + user.username + '/50/50.jpg' }}"
+                                             class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;" alt="">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">{{ user.name }} (@{{ user.username }})</h6>
+                                            <small class="text-muted">{{ user.email }}</small>
+                                            {% if user.profile and user.profile.work %}
+                                            <br><small class="text-muted">{{ user.profile.work }}</small>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <a href="{{ url_for('profile', user_id=user.id) }}" class="btn btn-outline-primary btn-sm me-2">
+                                                View Profile
+                                            </a>
+                                            {% if not are_friends(current_user.id, user.id) and not has_friend_request(current_user.id, user.id) %}
+                                            <form method="POST" action="{{ url_for('send_friend_request', user_id=user.id) }}" class="d-inline">
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-user-plus"></i>
+                                                </button>
+                                            </form>
+                                            {% elif are_friends(current_user.id, user.id) %}
+                                            <span class="badge bg-success">Friends</span>
+                                            {% elif has_friend_request(current_user.id, user.id) %}
+                                            <span class="badge bg-warning">Sent</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    {% if query %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5>No users found</h5>
+                        <p class="text-muted">Try searching with a different keyword</p>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5>Search for users</h5>
+                        <p class="text-muted">Enter a username or name in the search bar above</p>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

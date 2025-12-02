@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Chat with {{ other_user.name }} - Social Media{% endblock %}
+
+{% block extra_css %}
+<style>
+.messages-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.friends-sidebar {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.friend-item {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+}
+
+.friend-item:hover {
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+}
+
+.friend-item.active {
+    background: #e3f2fd;
+}
+
+.friend-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.chat-area {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+}
+
+.chat-header img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 15px;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    margin-bottom: 15px;
+    display: flex;
+    max-width: 80%;
+}
+
+.message.sent {
+    justify-content: flex-end;
+    align-self: flex-end;
+}
+
+.message.received {
+    justify-content: flex-start;
+    align-self: flex-start;
+}
+
+.message-bubble {
+    padding: 12px 18px;
+    border-radius: 18px;
+    position: relative;
+    word-wrap: break-word;
+}
+
+.message.sent .message-bubble {
+    background: #007bff;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.received .message-bubble {
+    background: white;
+    border: 1px solid #ddd;
+    border-bottom-left-radius: 4px;
+}
+
+.message-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.message-sender {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+    margin-right: 10px;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.message-input {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: white;
+    border-radius: 0 0 10px 10px;
+}
+
+.message-form {
+    display: flex;
+    gap: 10px;
+}
+
+.message-form input {
+    flex: 1;
+    border-radius: 25px;
+    padding: 12px 20px;
+    border: 1px solid #ddd;
+}
+
+.message-form button {
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-button {
+    margin-right: 15px;
+}
+
+@media (max-width: 768px) {
+    .friends-sidebar {
+        display: none;
+    }
+
+    .chat-area {
+        height: calc(100vh - 150px);
+    }
+
+    .message {
+        max-width: 90%;
+    }
+}
+
+/* Scrollbar styling */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="#" onclick="alert('Posts coming soon!')">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+                <a class="nav-link active" href="{{ url_for('messages') }}">
+                    <i class="fas fa-envelope me-1"></i>Messages
+                </a>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1{% if friends_count == 0 %} d-none{% endif %}" id="friendsCount">{{ friends_count }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            <i class="fas fa-user-friends me-2"></i>View All Friends
+                        </a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') if current_user.is_admin else '#' }}" onclick="if(!{{ current_user.is_admin|lower }}){ alert('Admin panel coming soon!') }">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Messages Container -->
+<div class="container-fluid mt-4 messages-container">
+    <div class="row">
+        <!-- Friends Sidebar (Desktop) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="friends-sidebar">
+                <div class="p-3 border-bottom">
+                    <a href="{{ url_for('messages') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>All Friends
+                    </a>
+                </div>
+                {% for friend in friends %}
+                <a href="{{ url_for('chat_with_user', user_id=friend.id) }}" class="friend-item {% if friend.id == other_user.id %}active{% endif %}">
+                    <img src="{{ friend.profile.profile_picture if friend.profile else 'https://picsum.photos/seed/' + friend.username + '/50/50.jpg' }}"
+                         class="friend-avatar" alt="{{ friend.username }}">
+                    <div>
+                        <div class="fw-bold">{{ friend.name }}</div>
+                        <small class="text-muted">@{{ friend.username }}</small>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-lg-9">
+            <div class="chat-area">
+                <!-- Chat Header -->
+                <div class="chat-header">
+                    <a href="{{ url_for('messages') }}" class="btn btn-sm btn-outline-secondary back-button d-lg-none">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <img src="{{ other_user.profile.profile_picture if other_user.profile else 'https://picsum.photos/seed/' + other_user.username + '/40/40.jpg' }}"
+                         alt="{{ other_user.username }}">
+                    <div>
+                        <h5 class="mb-0">{{ other_user.name }}</h5>
+                        <small class="text-muted">@{{ other_user.username }}</small>
+                    </div>
+                </div>
+
+                <!-- Messages -->
+                <div class="chat-messages" id="chatMessages">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="message {% if message.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                            <div class="message-bubble">
+                                {% if message.sender_id != current_user.id %}
+                                <div class="message-info">
+                                    <span class="message-sender">{{ message.sender.name }}</span>
+                                </div>
+                                {% endif %}
+                                <div>{{ message.content }}</div>
+                                <div class="message-time">{{ message.timestamp.strftime('%I:%M %p') }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted mt-5">
+                            <p>No messages yet. Start the conversation!</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Message Input -->
+                <div class="message-input">
+                    <form method="POST" action="{{ url_for('send_message', user_id=other_user.id) }}" class="message-form" id="messageForm">
+                        <input type="text" name="message" id="messageInput" class="form-control"
+                               placeholder="Type your message..." autocomplete="off" required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.currentUserId = {{ current_user.id }};
+let lastMessageId = {{ messages[-1].id if messages else 0 }};
+
+// Auto scroll to bottom on load
+window.addEventListener('load', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+// Scroll to bottom after sending a message
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+    setTimeout(function() {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }, 100);
+});
+
+// Poll for new messages
+setInterval(function() {
+    fetch(`/api/messages/{{ other_user.id }}/latest?last_id=${lastMessageId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.messages && data.messages.length > 0) {
+                const chatMessages = document.getElementById('chatMessages');
+
+                data.messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.sender_id == {{ current_user.id }} ? 'sent' : 'received'}`;
+
+                    const messageBubble = document.createElement('div');
+                    messageBubble.className = 'message-bubble';
+
+                    if (msg.sender_id != {{ current_user.id }}) {
+                        const messageInfo = document.createElement('div');
+                        messageInfo.className = 'message-info';
+
+                        const senderName = document.createElement('span');
+                        senderName.className = 'message-sender';
+                        senderName.textContent = msg.sender_name;
+
+                        messageInfo.appendChild(senderName);
+                        messageBubble.appendChild(messageInfo);
+                    }
+
+                    const content = document.createElement('div');
+                    content.textContent = msg.content;
+
+                    const time = document.createElement('div');
+                    time.className = 'message-time';
+                    const timeObj = new Date(msg.timestamp);
+                    time.textContent = timeObj.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    messageBubble.appendChild(content);
+                    messageBubble.appendChild(time);
+                    messageDiv.appendChild(messageBubble);
+
+                    chatMessages.appendChild(messageDiv);
+                    lastMessageId = msg.id;
+                });
+
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        });
+}, 3000);
+
+// Focus on input field
+document.getElementById('messageInput').focus();
+</script>
+{% endblock %}

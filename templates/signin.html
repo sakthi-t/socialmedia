@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - Social Media{% endblock %}
+
+{% block content %}
+<div class="signin-container">
+    <div class="row g-0 min-vh-100">
+        <!-- Left side - Carousel -->
+        <div class="col-lg-6 d-none d-lg-block">
+            <div id="imageCarousel" class="carousel slide h-100" data-bs-ride="carousel">
+                <div class="carousel-inner h-100">
+                    <div class="carousel-item active h-100">
+                        <div class="carousel-image d-flex align-items-center justify-content-center h-100" style="background-image: url('https://picsum.photos/seed/social1/800/600.jpg');">
+                            <div class="carousel-caption text-center">
+                                <h1 class="display-4 fw-bold text-white mb-4">Social Media</h1>
+                                <p class="lead text-white">Connect with friends</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item h-100">
+                        <div class="carousel-image d-flex align-items-center justify-content-center h-100" style="background-image: url('https://picsum.photos/seed/social2/800/600.jpg');">
+                            <div class="carousel-caption text-center">
+                                <h1 class="display-4 fw-bold text-white mb-4">Share Moments</h1>
+                                <p class="lead text-white">Express yourself</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="carousel-item h-100">
+                        <div class="carousel-image d-flex align-items-center justify-content-center h-100" style="background-image: url('https://picsum.photos/seed/social3/800/600.jpg');">
+                            <div class="carousel-caption text-center">
+                                <h1 class="display-4 fw-bold text-white mb-4">Chat with Swift</h1>
+                                <p class="lead text-white">Your AI Assistant</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right side - Sign In/Up Form -->
+        <div class="col-lg-6">
+            <div class="signin-form-container d-flex align-items-center justify-content-center min-vh-100 p-4">
+                <div class="form-card shadow-lg">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-pills mb-4 w-100" id="authTabs" role="tablist">
+                        <li class="nav-item flex-fill" role="presentation">
+                            <button class="nav-link w-100 {{ 'active' if not signup_active else '' }}" id="signin-tab" data-bs-toggle="pill" data-bs-target="#signin-tab-pane" type="button" role="tab">Sign In</button>
+                        </li>
+                        <li class="nav-item flex-fill" role="presentation">
+                            <button class="nav-link w-100 {{ 'active' if signup_active else '' }}" id="signup-tab" data-bs-toggle="pill" data-bs-target="#signup-tab-pane" type="button" role="tab">Sign Up</button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab content -->
+                    <div class="tab-content w-100" id="authTabsContent">
+                        <!-- Sign In Tab -->
+                        <div class="tab-pane fade {{ 'show active' if not signup_active else '' }}" id="signin-tab-pane" role="tabpanel">
+                            <form method="POST" action="{{ url_for('login') }}">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email address</label>
+                                    <input type="email" class="form-control form-control-lg" id="email" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <input type="password" class="form-control form-control-lg" id="password" name="password" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
+                                </div>
+                            </form>
+
+                            <div class="mt-4">
+                                <div class="text-center text-muted mb-3">or</div>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('github_auth') }}" class="btn btn-dark btn-lg">
+                                        <i class="fab fa-github me-2"></i>Sign in with GitHub
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sign Up Tab -->
+                        <div class="tab-pane fade {{ 'show active' if signup_active else '' }}" id="signup-tab-pane" role="tabpanel">
+                            <form method="POST" action="{{ url_for('signup') }}">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">Username</label>
+                                    <input type="text" class="form-control form-control-lg" id="username" name="username" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="email-signup" class="form-label">Email address</label>
+                                    <input type="email" class="form-control form-control-lg" id="email-signup" name="email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="password-signup" class="form-label">Password</label>
+                                    <input type="password" class="form-control form-control-lg" id="password-signup" name="password" required>
+                                    <div class="form-text">Minimum 8 characters</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="confirm-password" class="form-label">Confirm Password</label>
+                                    <input type="password" class="form-control form-control-lg" id="confirm-password" name="confirm_password" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success btn-lg">Sign Up</button>
+                                </div>
+                            </form>
+
+                            <div class="mt-4">
+                                <div class="text-center text-muted mb-3">or</div>
+                                <div class="d-grid">
+                                    <a href="{{ url_for('github_auth') }}" class="btn btn-dark btn-lg">
+                                        <i class="fab fa-github me-2"></i>Sign up with GitHub
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Social Media{% endblock %}
+
+{% block content %}
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('profile') }}">
+            <i class="fas fa-users me-2"></i>Social Media
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="navbar-nav me-auto">
+                <a class="nav-link active" href="{{ url_for('profile') }}">
+                    <i class="fas fa-home me-1"></i>Profile
+                </a>
+                <a class="nav-link" href="{{ url_for('posts') }}">
+                    <i class="fas fa-newspaper me-1"></i>Posts
+                </a>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar position-relative me-3">
+                <i class="fas fa-search search-icon"></i>
+                <form method="GET" action="{{ url_for('search_users') }}" class="d-flex">
+                    <input type="text" class="form-control" name="q" placeholder="Search users...">
+                </form>
+            </div>
+
+            <div class="navbar-nav">
+                <!-- Messages Icon -->
+                <a class="nav-link" href="{{ url_for('messages') }}">
+                    <i class="fas fa-envelope"></i>
+                </a>
+
+                <!-- Friends Icon -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="friendsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-friends"></i>
+                        <span class="badge bg-primary rounded-pill ms-1{% if friends_count == 0 %} d-none{% endif %}" id="friendsCount">{{ friends_count }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            <i class="fas fa-user-friends me-2"></i>View All Friends
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('friends_list') }}">
+                            Friend Requests <span class="badge bg-warning text-dark{% if pending_requests_count == 0 %} d-none{% endif %}">{{ pending_requests_count }}</span>
+                        </a></li>
+                    </ul>
+                </div>
+
+                <!-- Profile Dropdown -->
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ current_user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('profile') }}">
+                            <i class="fas fa-user me-2"></i>My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('activity_log') }}">
+                            <i class="fas fa-history me-2"></i>Activity Log
+                        </a></li>
+                        {% if current_user.is_admin %}
+                        <li><a class="dropdown-item" href="{{ url_for('admin_panel') }}">
+                            <i class="fas fa-cog me-2"></i>Admin Panel
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Edit Profile Form -->
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Profile Picture Section -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Profile Picture</label>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ current_user.profile.profile_picture }}"
+                                     class="rounded-circle border border-3 border-primary me-3"
+                                     style="width: 100px; height: 100px; object-fit: cover;"
+                                     id="currentPicture"
+                                     alt="Current Profile Picture">
+                                <div>
+                                    <input type="file" class="form-control mb-2" name="profile_picture"
+                                           accept="image/*" id="profilePictureInput">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="remove_picture" id="removePicture">
+                                        <label class="form-check-label" for="removePicture">
+                                            Remove current picture and use random image
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Upload a new photo or remove to use a random image</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Non-editable Fields (for display only) -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Username</label>
+                                <input type="text" class="form-control" value="{{ current_user.username }}" readonly>
+                                <small class="text-muted">Username cannot be changed</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">Email</label>
+                                <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                                <small class="text-muted">Email cannot be changed</small>
+                            </div>
+                        </div>
+
+                        <!-- Editable Fields -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label fw-bold">
+                                    <i class="fas fa-phone me-1"></i>Phone Number
+                                </label>
+                                <input type="tel" class="form-control" id="phone" name="phone"
+                                       value="{{ current_user.profile.phone or '' }}"
+                                       placeholder="Enter your phone number">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="education" class="form-label fw-bold">
+                                    <i class="fas fa-graduation-cap me-1"></i>Latest Education
+                                </label>
+                                <input type="text" class="form-control" id="education" name="education"
+                                       value="{{ current_user.profile.education or '' }}"
+                                       placeholder="e.g., Bachelor's in Computer Science">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="work" class="form-label fw-bold">
+                                    <i class="fas fa-briefcase me-1"></i>Latest Work
+                                </label>
+                                <input type="text" class="form-control" id="work" name="work"
+                                       value="{{ current_user.profile.work or '' }}"
+                                       placeholder="e.g., Software Engineer at Tech Corp">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="website" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-1"></i>Website
+                                </label>
+                                <input type="url" class="form-control" id="website" name="website"
+                                       value="{{ current_user.profile.website or '' }}"
+                                       placeholder="https://yourwebsite.com">
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="github" class="form-label fw-bold">
+                                    <i class="fab fa-github me-1"></i>GitHub Username
+                                </label>
+                                <input type="text" class="form-control" id="github" name="github"
+                                       value="{{ current_user.profile.github or '' }}"
+                                       placeholder="github-username">
+                                <small class="text-muted">Only enter the username, not full URL</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="linkedin" class="form-label fw-bold">
+                                    <i class="fab fa-linkedin me-1"></i>LinkedIn Username
+                                </label>
+                                <input type="text" class="form-control" id="linkedin" name="linkedin"
+                                       value="{{ current_user.profile.linkedin or '' }}"
+                                       placeholder="linkedin-username">
+                                <small class="text-muted">Only enter the username, not full URL</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('profile') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const profilePictureInput = document.getElementById('profilePictureInput');
+    const removePictureCheckbox = document.getElementById('removePicture');
+    const currentPicture = document.getElementById('currentPicture');
+
+    // Preview new picture when selected
+    profilePictureInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentPicture.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            // Uncheck remove picture if a new picture is selected
+            removePictureCheckbox.checked = false;
+        }
+    });
+
+    // Handle remove picture checkbox
+    removePictureCheckbox.addEventListener('change', function(e) {
+        if (e.target.checked) {
+            // Clear the file input
+            profilePictureInput.value = '';
+            // Show a placeholder
+            currentPicture.src = 'https://picsum.photos/seed/default/100/100.jpg';
+        } else {
+            // Restore original picture if no new picture selected
+            if (!profilePictureInput.files[0]) {
+                currentPicture.src = '{{ current_user.profile.profile_picture }}';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

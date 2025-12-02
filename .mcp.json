@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\Sakthi\\AI_Agents\\socialmedia"
+      ]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-git",
+        "C:\\Users\\Sakthi\\AI_Agents\\socialmedia"
+      ]
+    }
+  }
+}

@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}User Details - Admin Panel{% endblock %}
+
+{% block content %}
+<!-- Include Navbar -->
+{% include 'navbar.html' %}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin_panel') }}">Admin Panel</a></li>
+                    <li class="breadcrumb-item active">User Details</li>
+                </ol>
+            </nav>
+
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>User Details
+                    </h4>
+                    <div>
+                        <a href="{{ url_for('profile', user_id=user.id) }}" class="btn btn-outline-light btn-sm me-2">
+                            <i class="fas fa-user-circle me-1"></i>View Public Profile
+                        </a>
+                        <a href="{{ url_for('admin_panel') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Admin Panel
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- User Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-4 text-center">
+                            {% if profile and profile.profile_picture %}
+                                <img src="{{ profile.profile_picture }}"
+                                     class="rounded-circle border border-3 border-primary mb-3"
+                                     width="200" height="200"
+                                     style="object-fit: cover;"
+                                     alt="{{ user.name }}">
+                            {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3"
+                                     style="width: 200px; height: 200px;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            {% endif %}
+                            <h4>{{ user.name }}</h4>
+                            <p class="text-muted">@{{ user.username }}</p>
+                            <span class="badge {% if user.is_admin %}bg-danger{% else %}bg-success{% endif %}">
+                                {% if user.is_admin %}Admin{% else %}User{% endif %}
+                            </span>
+                        </div>
+                        <div class="col-md-8">
+                            <h5>Account Information</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="150"><strong>Email:</strong></td>
+                                    <td>{{ user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Role:</strong></td>
+                                    <td>{{ user.role }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Joined:</strong></td>
+                                    <td>{{ user.created_at.strftime('%B %d, %Y at %I:%M %p') }}</td>
+                                </tr>
+                                {% if profile %}
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ profile.phone or 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Education:</strong></td>
+                                    <td>{{ profile.education or 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Work:</strong></td>
+                                    <td>{{ profile.work or 'Not provided' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Website:</strong></td>
+                                    <td>
+                                        {% if profile.website %}
+                                            <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a>
+                                        {% else %}
+                                            Not provided
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- User Statistics -->
+                    <hr>
+                    <h5 class="mb-3">Activity Statistics</h5>
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="card bg-primary text-white text-center">
+                                <div class="card-body">
+                                    <h3>{{ stats.posts_count }}</h3>
+                                    <p class="mb-0">Posts</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-info text-white text-center">
+                                <div class="card-body">
+                                    <h3>{{ stats.comments_count }}</h3>
+                                    <p class="mb-0">Comments</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-success text-white text-center">
+                                <div class="card-body">
+                                    <h3>{{ stats.messages_sent }}</h3>
+                                    <p class="mb-0">Messages Sent</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-warning text-dark text-center">
+                                <div class="card-body">
+                                    <h3>{{ stats.messages_received }}</h3>
+                                    <p class="mb-0">Messages Received</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-secondary text-white text-center">
+                                <div class="card-body">
+                                    <h3>{{ stats.friends_count }}</h3>
+                                    <p class="mb-0">Friends</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card text-white text-center" style="background-color: #6f42c1;">
+                                <div class="card-body">
+                                    <h3>{{ stats.chat_sessions }}</h3>
+                                    <p class="mb-0">Chat Sessions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <hr>
+                    <div class="d-flex justify-content-end">
+                        {% if user.id != current_user.id %}
+                        <button class="btn btn-danger"
+                                onclick="confirmDelete({{ user.id }}, '{{ user.name }}')">
+                            <i class="fas fa-trash me-2"></i>Delete User
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirm User Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="userName"></strong>?</p>
+                <p class="text-danger">
+                    <i class="fas fa-warning me-2"></i>
+                    This action cannot be undone! All of the user's data will be permanently deleted, including:
+                </p>
+                <ul>
+                    <li>Profile information</li>
+                    <li>Posts and comments</li>
+                    <li>Messages</li>
+                    <li>Friend connections</li>
+                    <li>Chat history with Swift AI</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete User
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(userId, userName) {
+    document.getElementById('userName').textContent = userName;
+    document.getElementById('deleteForm').action = `/admin/user/${userId}/delete`;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}
